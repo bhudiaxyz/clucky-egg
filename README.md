@@ -2,7 +2,7 @@
 
 A browser clone of the classic **Chuckie Egg** (Doug Anderson, 1983): a farmer on a stack of platforms, twelve eggs to collect a level, ten piles of grain, hens that chase you up the ladders, lifts that wrap from the top of the screen to the bottom, a caged Mother Duck, and a bonus clock that never stops.
 
-Built with **TypeScript, Vite and three.js**, as a sibling of [Mayhem Miner](../mayhem-miner): the same architecture, voxel-style rigged characters, procedural textures, menus, controls and GPU tiering, with a new game on top. Playable on desktop, tablets and (especially) phones, in portrait or landscape.
+Built with **TypeScript, Vite and three.js**, using the same architecture as *Mayhem Miner*[../mayhem-miner](https://github.com/bhudiaxyz/mayhem-miner]; voxel-style rigged characters, procedural textures, menus, controls and GPU tiering, with a new game on top. Playable on desktop, tablets and (especially) phones, in portrait or landscape.
 
 ## Play
 
