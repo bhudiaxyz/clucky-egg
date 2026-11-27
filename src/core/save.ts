@@ -29,9 +29,9 @@ export interface Save {
 export const save: Save = load();
 
 function load(): Save {
-    const base: Save = { best: 0, reached: 0, seenHelp: false };
+    const base: Save = {best: 0, reached: 0, seenHelp: false};
     try {
-        return { ...base, ...JSON.parse(localStorage.getItem(KEY) || "{}") };
+        return {...base, ...JSON.parse(localStorage.getItem(KEY) || "{}")};
     } catch {
         return base;
     }

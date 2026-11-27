@@ -23,7 +23,7 @@
  *
  * See also: world/levels.ts, world/generate.ts; DESIGN.md "6. The solver".
  */
-import { H, parse, tileAt, TIER_ROWS, W, type LevelSpec } from "./levels";
+import {H, type LevelSpec, parse, TIER_ROWS, tileAt, W} from "./levels";
 
 export function reach(spec: LevelSpec): Set<number> {
     const t = parse(spec).tiles;

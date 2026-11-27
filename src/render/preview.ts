@@ -18,20 +18,22 @@
  * See also: ui/menu.ts (the carousels), render/characters.ts, render/props.ts; DESIGN.md "10.1 Screens".
  */
 import * as THREE from "three";
-import { ALL_CREATURES } from "../core/creatures";
-import { modelFor as makeModel, type Character } from "./characters";
-import { propModel, PROPS, type PropId } from "./props";
+import {ALL_CREATURES} from "../core/creatures";
+import {type Character, modelFor as makeModel} from "./characters";
+import {type PropId, propModel, PROPS} from "./props";
 
 const SIZE = 192;
 
 export function animatePreviews(root: HTMLElement): () => void {
     const canvases = [...root.querySelectorAll<HTMLCanvasElement>("canvas[data-preview]")];
-    if (!canvases.length) return () => {};
+    if (!canvases.length) return () => {
+    };
     let renderer: THREE.WebGLRenderer;
     try {
-        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+        renderer = new THREE.WebGLRenderer({antialias: true, alpha: true, preserveDrawingBuffer: true});
     } catch {
-        return () => {};
+        return () => {
+        };
     }
     renderer.setPixelRatio(1);
     renderer.setSize(SIZE, SIZE, false);
@@ -74,7 +76,7 @@ export function animatePreviews(root: HTMLElement): () => void {
             const m = modelFor(cv.dataset.preview ?? "harry");
             m.group.visible = true;
             m.group.rotation.y = -0.45 + Math.sin(t * 0.6) * 0.7;
-            m.pose({ dt, t, phase: t * 5, mode: "walk", land: 0, reach: 0 });
+            m.pose({dt, t, phase: t * 5, mode: "walk", land: 0, reach: 0});
             renderer.render(scene, camera);
             const ctx = cv.getContext("2d")!;
             ctx.clearRect(0, 0, cv.width, cv.height);

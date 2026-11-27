@@ -31,6 +31,7 @@
 export const W = 26;
 export const H = 24;
 export const CELL = 8;
+
 /** Rows of the five platform tiers. */
 export const TIER_ROWS = [6, 10, 14, 18, 22];
 
@@ -89,8 +90,8 @@ export const LEVELS: LevelSpec[] = [
         hens: [[5, 0], [19, 1], [4, 2], [20, 3]],
         start: [3, 4],
         lifts: [
-            { c: 11, phase: 0 },
-            { c: 11, phase: 0.5 },
+            {c: 11, phase: 0},
+            {c: 11, phase: 0.5},
         ],
         time: 950,
     },
@@ -145,10 +146,10 @@ export const LEVELS: LevelSpec[] = [
         hens: [[10, 0], [15, 1], [8, 2], [17, 3], [12, 4]],
         start: [10, 4],
         lifts: [
-            { c: 2, phase: 0 },
-            { c: 2, phase: 0.5 },
-            { c: 22, phase: 0.25 },
-            { c: 22, phase: 0.75 },
+            {c: 2, phase: 0},
+            {c: 2, phase: 0.5},
+            {c: 22, phase: 0.25},
+            {c: 22, phase: 0.75},
         ],
         time: 1000,
     },
@@ -206,16 +207,16 @@ export function parse(spec: LevelSpec): Level {
         // Spares start at the middle of the widest span of tiers 1 and 3.
         if (i % 2 === 0) return;
         const [a, b] = spans.reduce((m, s) => (s[1] - s[0] > m[1] - m[0] ? s : m));
-        spares.push({ x: ((a + b + 1) / 2) * CELL, feet: feet(i) });
+        spares.push({x: ((a + b + 1) / 2) * CELL, feet: feet(i)});
     });
     return {
         name: spec.name,
         tiles: t.join(""),
-        eggs: spec.eggs.map(([c, tier]) => ({ x: c * CELL + 4, y: feet(tier) - 4 })),
-        seeds: spec.seeds.map(([c, tier]) => ({ x: c * CELL + 4, y: feet(tier) - 3 })),
-        hens: spec.hens.map(([c, tier]) => ({ x: c * CELL + 4, feet: feet(tier) })),
-        start: { x: spec.start[0] * CELL + 4, feet: feet(spec.start[1]) },
-        lifts: (spec.lifts ?? []).map((l) => ({ x: l.c * CELL, phase: l.phase })),
+        eggs: spec.eggs.map(([c, tier]) => ({x: c * CELL + 4, y: feet(tier) - 4})),
+        seeds: spec.seeds.map(([c, tier]) => ({x: c * CELL + 4, y: feet(tier) - 3})),
+        hens: spec.hens.map(([c, tier]) => ({x: c * CELL + 4, feet: feet(tier)})),
+        start: {x: spec.start[0] * CELL + 4, feet: feet(spec.start[1])},
+        lifts: (spec.lifts ?? []).map((l) => ({x: l.c * CELL, phase: l.phase})),
         time: spec.time,
         spares,
     };

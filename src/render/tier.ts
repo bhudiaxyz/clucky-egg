@@ -140,7 +140,7 @@ export function detectTier(): Tier | "none" {
     if (forced && forced in TIER_SETTINGS) return forced as Tier;
     let renderer = "";
     try {
-        const gl = document.createElement("canvas").getContext("webgl2", { powerPreference: "high-performance" });
+        const gl = document.createElement("canvas").getContext("webgl2", {powerPreference: "high-performance"});
         if (!gl) return "none";
         const dbg = gl.getExtension("WEBGL_debug_renderer_info");
         renderer = String(gl.getParameter(dbg ? dbg.UNMASKED_RENDERER_WEBGL : gl.RENDERER) || "");
@@ -190,7 +190,8 @@ export class Governor {
         if (this.elapsed < Governor.WINDOW_S) return;
         const slow = this.sum / this.n > Governor.SLOW_MS;
         this.reset();
-        if (slow && !this.onStep()) this.frame = () => {}; // nothing left to shed
+        if (slow && !this.onStep()) this.frame = () => {
+        }; // nothing left to shed
     }
 
     reset() {

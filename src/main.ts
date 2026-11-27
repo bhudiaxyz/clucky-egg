@@ -31,21 +31,20 @@
  * DESIGN.md "3. Architecture" and "10. UI, menus and progress".
  */
 import "./styles.css";
-import { Game, type GameEvent, type Mode } from "./core/game";
-import { applyUiColors, COLORS } from "./core/palette";
-import { markHelpSeen, record, save } from "./core/save";
-import { isMuted, setMusicIntensity, sfx, toggleMute, unlock } from "./fx/audio";
-import { clearInput, HELP, isTouch, pollPads, readInput, setPadHandler, setupInput } from "./player/input";
-import { detectTier, Governor, TIER_SETTINGS, type TierSettings } from "./render/tier";
-import { animatePreviews } from "./render/preview";
-import { View } from "./render/view";
-import { drawHud, message } from "./ui/hud";
+import {Game, type GameEvent, type Mode} from "./core/game";
+import {applyUiColors, COLORS} from "./core/palette";
+import {markHelpSeen, record, save} from "./core/save";
+import {isMuted, setMusicIntensity, sfx, toggleMute, unlock} from "./fx/audio";
+import {clearInput, HELP, isTouch, pollPads, readInput, setPadHandler, setupInput} from "./player/input";
+import {detectTier, Governor, TIER_SETTINGS, type TierSettings} from "./render/tier";
+import {animatePreviews} from "./render/preview";
+import {View} from "./render/view";
+import {drawHud, message} from "./ui/hud";
 import {
-    farmSelectBody,
     closeSheet,
+    farmSelectBody,
     hideIntro,
     howToBody,
-    wireHowTo,
     menuBack,
     menuNav,
     menuSelect,
@@ -54,12 +53,13 @@ import {
     sheetOpen,
     showIntro,
     showSheet,
+    wireHowTo,
 } from "./ui/menu";
 
-const IDLE = { left: false, right: false, up: false, down: false, jump: false };
+const IDLE = {left: false, right: false, up: false, down: false, jump: false};
 const ATTRACT_SECONDS = 6;
 /** Menu focus directions (dx, dy) for arrow keys and pad d-pad / stick. */
-const PAD_DIRS: Record<string, [number, number]> = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+const PAD_DIRS: Record<string, [number, number]> = {up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0]};
 const ARROWS: Record<string, [number, number]> = {
     ArrowUp: PAD_DIRS.up,
     ArrowDown: PAD_DIRS.down,
@@ -124,7 +124,7 @@ async function startup() {
         if (game && !paused && game.phase !== "over") showPause("pause");
     };
     await step(2);
-    attract = new Game(0, { demo: true });
+    attract = new Game(0, {demo: true});
     view.sync(attract, 0);
     await step(3);
     await view.warmup();
@@ -147,13 +147,13 @@ function showMenu() {
     const begin = (n: number, mode: Mode = "classic") => () => (save.seenHelp ? startRun(n, mode) : howTo(() => startRun(n, mode)));
     renderMainMenu([
         ...(save.reached > 0
-            ? [{ label: "Continue", hint: `Level ${save.reached + 1}`, action: () => startRun(save.reached) }]
+            ? [{label: "Continue", hint: `Level ${save.reached + 1}`, action: () => startRun(save.reached)}]
             : []),
-        { label: "New game", action: begin(0) },
-        { label: "Random farm", hint: "endless", action: begin(0, "random") },
-        { label: "Level select", disabled: save.reached === 0, action: levelSelect },
-        { label: "How to play", action: () => howTo() },
-        { label: isMuted() ? "Sound: off" : "Sound: on", action: () => (toggleMute(), showMenu()) },
+        {label: "New game", action: begin(0)},
+        {label: "Random farm", hint: "endless", action: begin(0, "random")},
+        {label: "Level select", disabled: save.reached === 0, action: levelSelect},
+        {label: "How to play", action: () => howTo()},
+        {label: isMuted() ? "Sound: off" : "Sound: on", action: () => (toggleMute(), showMenu())},
     ]);
 }
 
@@ -161,12 +161,13 @@ function levelSelect() {
     showSheet({
         title: "Level select",
         body: farmSelectBody(save.reached, "classic", 0, (n) => (closeSheet(), startRun(n))),
-        actions: [{ label: "Back", kbd: "Esc", action: closeSheet }],
+        actions: [{label: "Back", kbd: "Esc", action: closeSheet}],
     });
 }
 
 function howTo(then?: () => void) {
-    let stopPreviews = () => {};
+    let stopPreviews = () => {
+    };
     const done = () => {
         stopPreviews();
         closeSheet();
@@ -176,7 +177,7 @@ function howTo(then?: () => void) {
     showSheet({
         title: "How to play",
         body: howToBody(bindings()),
-        actions: [{ label: then ? "Start" : "Back", primary: true, action: done }],
+        actions: [{label: then ? "Start" : "Back", primary: true, action: done}],
         onBack: done,
     });
     wireHowTo($("#sheet .sheet-body"));
@@ -193,7 +194,7 @@ function startRun(n: number, mode: Mode = "classic") {
     runMode = mode;
     // Random farm: a new seed each run, so no two runs share their farms.
     runSeed = mode === "random" ? Math.floor(Math.random() * 1e6) : 0;
-    game = new Game(n, { mode, seed: runSeed });
+    game = new Game(n, {mode, seed: runSeed});
     game.onEvent = onEvent;
     shownN = -1;
     paused = false;
@@ -202,7 +203,8 @@ function startRun(n: number, mode: Mode = "classic") {
     $("#pause").classList.remove("open");
     $("#hud").hidden = false;
     body.classList.add("playing");
-    if (isTouch) document.documentElement.requestFullscreen?.({ navigationUI: "hide" }).catch(() => {});
+    if (isTouch) document.documentElement.requestFullscreen?.({navigationUI: "hide"}).catch(() => {
+    });
 }
 
 function onEvent(e: GameEvent) {
@@ -254,17 +256,17 @@ function showPause(kind: "pause" | "over") {
             : `${g.n + 1}. ${g.level.name} · score ${g.score}`;
     renderButtons($("#pause nav"), [
         ...(kind === "over"
-            ? [{ label: "Play again", kbd: "Enter", primary: true, action: () => startRun(startN, runMode) }]
+            ? [{label: "Play again", kbd: "Enter", primary: true, action: () => startRun(startN, runMode)}]
             : [
-                  { label: "Resume", kbd: "Esc", primary: true, action: resume },
-                  { label: "Restart level", kbd: "R", action: restart },
-              ]),
-        { label: isMuted() ? "Sound: off" : "Sound: on", kbd: "M", action: () => (toggleMute(), showPause(kind)) },
-        { label: "Main menu", kbd: "Q", action: showMenu },
+                {label: "Resume", kbd: "Esc", primary: true, action: resume},
+                {label: "Restart level", kbd: "R", action: restart},
+            ]),
+        {label: isMuted() ? "Sound: off" : "Sound: on", kbd: "M", action: () => (toggleMute(), showPause(kind))},
+        {label: "Main menu", kbd: "Q", action: showMenu},
     ]);
     $("#pause .bindings").innerHTML = bindings();
     el.classList.add("open");
-    el.querySelector<HTMLElement>("nav button")?.focus({ preventScroll: true });
+    el.querySelector<HTMLElement>("nav button")?.focus({preventScroll: true});
 }
 
 function resume() {
@@ -325,7 +327,7 @@ function frame(now: number) {
     } else {
         pollPads();
         attract.update(dt, IDLE);
-        if (attract.clock > ATTRACT_SECONDS) attract = new Game((attract.n + 1) % 8, { demo: true });
+        if (attract.clock > ATTRACT_SECONDS) attract = new Game((attract.n + 1) % 8, {demo: true});
     }
     view.sync(game ?? attract, game && paused ? 0 : dt);
 }
@@ -371,7 +373,7 @@ function wireEvents() {
     $(".ls-controls").textContent = isTouch
         ? "Tap a menu item to begin"
         : HELP.map(([k, a]) => `${k}: ${a}`).join("   ·   ");
-    Object.defineProperty(window, "__game", { get: () => game });
+    Object.defineProperty(window, "__game", {get: () => game});
 }
 
 applyUiColors();

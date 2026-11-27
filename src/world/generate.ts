@@ -25,10 +25,10 @@
  *
  * See also: core/difficulty.ts, world/solver.ts, world/levels.ts; DESIGN.md "7. Generation and difficulty".
  */
-import { difficulty } from "../core/difficulty";
-import { rng } from "../core/random";
-import { LEVELS, parse, W, type Level, type LevelSpec } from "./levels";
-import { solves } from "./solver";
+import {difficulty} from "../core/difficulty";
+import {rng} from "../core/random";
+import {type Level, LEVELS, type LevelSpec, parse, W} from "./levels";
+import {solves} from "./solver";
 
 export type Mode = "classic" | "random";
 
@@ -80,8 +80,8 @@ function candidate(n: number, seed: number, attempt: number): LevelSpec | null {
                 return out.filter(([x, y]) => y - x >= 1);
             });
         }
-        for (let i = 0; i < d.lifts; i++) lifts.push({ c: sc + 2, phase: d.lifts === 1 ? 0.3 : i / d.lifts });
-        if (d.lifts === 1) lifts.push({ c: sc + 2, phase: 0.8 });
+        for (let i = 0; i < d.lifts; i++) lifts.push({c: sc + 2, phase: d.lifts === 1 ? 0.3 : i / d.lifts});
+        if (d.lifts === 1) lifts.push({c: sc + 2, phase: 0.8});
     }
     if (tiers.some((s) => !s.length)) return null;
 

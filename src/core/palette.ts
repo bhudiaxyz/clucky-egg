@@ -27,7 +27,7 @@
  * See also: render/view.ts, render/paint.ts, styles.css; DESIGN.md "11. Palette and themes".
  */
 import * as THREE from "three";
-import { rng } from "./random";
+import {rng} from "./random";
 
 export type RockStyle = "mottled" | "strata" | "fractured" | "cobble" | "crystal";
 export type BackStyle = "bars" | "strata" | "cave" | "stars" | "roots" | "veins";

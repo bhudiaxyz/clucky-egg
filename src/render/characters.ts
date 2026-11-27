@@ -34,13 +34,14 @@
  * DESIGN.md "9. Rendering" and "9.1 Characters".
  */
 import * as THREE from "three";
-import { COLORS } from "../core/palette";
+import {COLORS} from "../core/palette";
 
 export const VOX = 1 / 8;
 /** [x, y, z, w, h, d, colour, glow?] in voxels. glow > 0 makes the voxels emit at that HDR strength. */
 export type Box = [number, number, number, number, number, number, number, number?];
 
 export type Mode = "idle" | "walk" | "climb" | "rise" | "fall" | "flail" | "cheer" | "eat";
+
 export interface PoseState {
     /** Seconds since the last frame (0 while paused). */
     dt: number;
@@ -54,11 +55,13 @@ export interface PoseState {
     /** Model units from the origin up to an anchor above (a spider's silk: 0 for none). */
     reach?: number;
 }
+
 export interface Character {
     group: THREE.Group;
-    pose(s: PoseState): void;
     /** Height in voxels, so view.ts can enlarge small creatures towards a farmer's height. */
     h: number;
+
+    pose(s: PoseState): void;
 }
 
 export interface FaceSet {
@@ -82,7 +85,7 @@ const FACES = [0, 1, 2].flatMap((ax) =>
         const quad = [corner(0, 0), corner(1, 0), corner(1, 1), corner(0, 1)];
         const n = [0, 0, 0];
         n[ax] = s;
-        return { n, quad: s > 0 ? quad : quad.reverse() };
+        return {n, quad: s > 0 ? quad : quad.reverse()};
     })
 );
 
@@ -93,15 +96,15 @@ export function voxelFaces(boxes: Box[]): { solid: FaceSet; glow: FaceSet } {
     for (const [x0, y0, z0, w, h, d, c, g = 0] of boxes)
         for (let x = x0; x < x0 + w; x++)
             for (let y = y0; y < y0 + h; y++)
-                for (let z = z0; z < z0 + d; z++) grid.set(key(x, y, z), { x, y, z, c, g });
-    const solid: FaceSet = { pos: [], nrm: [], col: [] };
-    const glow: FaceSet = { pos: [], nrm: [], col: [] };
+                for (let z = z0; z < z0 + d; z++) grid.set(key(x, y, z), {x, y, z, c, g});
+    const solid: FaceSet = {pos: [], nrm: [], col: []};
+    const glow: FaceSet = {pos: [], nrm: [], col: []};
     const rgb = new THREE.Color();
-    for (const { x, y, z, c, g } of grid.values()) {
+    for (const {x, y, z, c, g} of grid.values()) {
         const j = 0.9 + 0.16 * hash(x, y, z);
         rgb.setHex(c).multiplyScalar(g > 0 ? g : j);
         const set = g > 0 ? glow : solid;
-        for (const { n, quad } of FACES) {
+        for (const {n, quad} of FACES) {
             if (grid.has(key(x + n[0], y + n[1], z + n[2]))) continue;
             for (const i of [0, 1, 2, 0, 2, 3]) {
                 const q = quad[i];
@@ -111,7 +114,7 @@ export function voxelFaces(boxes: Box[]): { solid: FaceSet; glow: FaceSet } {
             }
         }
     }
-    return { solid, glow };
+    return {solid, glow};
 }
 
 function hash(x: number, y: number, z: number) {
@@ -135,10 +138,10 @@ function mesh(f: FaceSet, mat: THREE.Material) {
 function part(boxes: Box[], offset: number[], at: number[], extra: THREE.MeshStandardMaterialParameters = {}) {
     const joint = new THREE.Group();
     joint.position.set(at[0] * VOX, at[1] * VOX, at[2] * VOX);
-    const { solid, glow } = voxelFaces(boxes);
+    const {solid, glow} = voxelFaces(boxes);
     for (const [f, mat] of [
-        [solid, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, ...extra })],
-        [glow, new THREE.MeshBasicMaterial({ vertexColors: true, toneMapped: false })],
+        [solid, new THREE.MeshStandardMaterial({vertexColors: true, roughness: 0.75, ...extra})],
+        [glow, new THREE.MeshBasicMaterial({vertexColors: true, toneMapped: false})],
     ] as const) {
         if (!f.pos.length) continue;
         const m = mesh(f, mat);
@@ -162,7 +165,7 @@ const BLACK = 0x14141c;
 // ---- Harry ----------------------------------------------------------------------------------------
 
 export function harryModel(): Character {
-    const { overalls, shirt, skin, straw, boots } = COLORS;
+    const {overalls, shirt, skin, straw, boots} = COLORS;
     const dark = shade(overalls, 0.7),
         hair = 0x6a3e22,
         belt = 0x5a3a22;
@@ -293,7 +296,7 @@ export function harryModel(): Character {
         const land = Math.min(1, Math.max(0, s.land));
         root.scale.set(1 + 0.12 * land, (1 - 0.22 * land) * stretch, 1 + 0.12 * land);
     };
-    return { group, pose, h: 16 };
+    return {group, pose, h: 16};
 }
 
 // ---- Fowl: hen, rooster, goose ---------------------------------------------------------------------
@@ -317,7 +320,7 @@ interface Fowl {
 }
 
 function fowl(o: Fowl): Character {
-    const { len, bh, w, legH, neck } = o;
+    const {len, bh, w, legH, neck} = o;
     const legs = [-1.5, 1.5].map((z) =>
         part(
             [
@@ -394,11 +397,51 @@ function fowl(o: Fowl): Character {
 }
 
 const hen = (c: number) =>
-    fowl({ body: c, wing: shade(c, 0.88), beak: 0xffa83a, comb: 0xe8473f, leg: 0xe89a3a, tail: [shade(c, 0.9), shade(c, 0.75)], len: 6, bh: 5, w: 5, legH: 5, neck: 2, combH: 2 });
+    fowl({
+        body: c,
+        wing: shade(c, 0.88),
+        beak: 0xffa83a,
+        comb: 0xe8473f,
+        leg: 0xe89a3a,
+        tail: [shade(c, 0.9), shade(c, 0.75)],
+        len: 6,
+        bh: 5,
+        w: 5,
+        legH: 5,
+        neck: 2,
+        combH: 2
+    });
 const rooster = (c: number) =>
-    fowl({ body: c, wing: 0x8a3a1a, beak: 0xffa83a, comb: 0xd02a2a, leg: 0xe89a3a, tail: [0x3a8a5a, 0x2a5aa0], sweep: 0x3ac090, len: 7, bh: 6, w: 5, legH: 5, neck: 3, combH: 3 });
+    fowl({
+        body: c,
+        wing: 0x8a3a1a,
+        beak: 0xffa83a,
+        comb: 0xd02a2a,
+        leg: 0xe89a3a,
+        tail: [0x3a8a5a, 0x2a5aa0],
+        sweep: 0x3ac090,
+        len: 7,
+        bh: 6,
+        w: 5,
+        legH: 5,
+        neck: 3,
+        combH: 3
+    });
 const goose = (c: number) =>
-    fowl({ body: c, wing: shade(c, 0.85), beak: 0xff8a2a, comb: c, leg: 0xff8a2a, tail: [shade(c, 0.9), shade(c, 0.8)], len: 8, bh: 6, w: 6, legH: 3, neck: 6, combH: 0 });
+    fowl({
+        body: c,
+        wing: shade(c, 0.85),
+        beak: 0xff8a2a,
+        comb: c,
+        leg: 0xff8a2a,
+        tail: [shade(c, 0.9), shade(c, 0.8)],
+        len: 8,
+        bh: 6,
+        w: 6,
+        legH: 3,
+        neck: 6,
+        combH: 0
+    });
 
 function chick(c: number): Character {
     const body = part(
@@ -485,7 +528,7 @@ function beetle(c: number, spots = false): Character {
         // A split shell with black spots.
         boxes.push([0, 1, 2, 8, 2, 1, BLACK], [1, 3, 1, 2, 1, 1, BLACK], [5, 3, 4, 2, 1, 1, BLACK], [2, 2, 4, 1, 1, 1, BLACK], [6, 2, 1, 1, 1, 1, BLACK]);
     }
-    const body = part(boxes, [-5, 0, -3], [0, 3, 0], { roughness: 0.45 });
+    const body = part(boxes, [-5, 0, -3], [0, 3, 0], {roughness: 0.45});
     const legs = [-3, 0, 3].flatMap((x, i) =>
         [-1, 1].map((side) => {
             const l = part(
@@ -566,7 +609,7 @@ function ant(c: number): Character {
         ],
         [-6, 0, -1.5],
         [0, 3, 0],
-        { roughness: 0.4 }
+        {roughness: 0.4}
     );
     const legs = [-1.5, 3, 7].flatMap((x, i) =>
         [-1, 1].map((side) => {
@@ -594,8 +637,8 @@ function ant(c: number): Character {
 function caterpillar(c: number): Character {
     const dk = shade(c, 0.6);
     const SEGS = 5;
-    const segs = Array.from({ length: SEGS }, (_, i) =>
-        part([[0, 0, 0, 2, 3, 3, i % 2 ? dk : c], [0, 0, 0, 2, 1, 3, shade(c, 0.8)]], [-1, 0, -1.5], [2 - i * 2, 0, 0], { roughness: 0.4 })
+    const segs = Array.from({length: SEGS}, (_, i) =>
+        part([[0, 0, 0, 2, 3, 3, i % 2 ? dk : c], [0, 0, 0, 2, 1, 3, shade(c, 0.8)]], [-1, 0, -1.5], [2 - i * 2, 0, 0], {roughness: 0.4})
     );
     const head = part(
         [
@@ -608,7 +651,7 @@ function caterpillar(c: number): Character {
         ],
         [-1.5, 0, -2],
         [4.5, 0, 0],
-        { roughness: 0.4 }
+        {roughness: 0.4}
     );
     const group = new THREE.Group();
     group.add(...segs, head);
@@ -638,7 +681,7 @@ function hedgehog(c: number): Character {
     // Spines: little spikes poking up and back over the whole back.
     for (let x = 0; x < 8; x += 2) for (let z = 0; z < 6; z += 2) boxes.push([x, 5 + ((x + z) % 4 === 0 ? 1 : 0), z, 1, 1, 1, shade(c, 1.4)]);
     boxes.push([-1, 2, 1, 1, 2, 4, dk]);
-    const body = part(boxes, [-5, 0, -3], [0, 1, 0], { roughness: 0.9 });
+    const body = part(boxes, [-5, 0, -3], [0, 1, 0], {roughness: 0.9});
     const feet = [-1, 1].flatMap((z) => [-2, 3].map((x) => part([[0, 0, 0, 2, 1, 1, dk]], [-0.5, -1, -0.5], [x, 1, z * 2])));
     const group = new THREE.Group();
     group.add(body, ...feet);
@@ -669,7 +712,7 @@ function mole(c: number): Character {
         ],
         [-5, 0, -3],
         [0, 1, 0],
-        { roughness: 0.95 }
+        {roughness: 0.95}
     );
     const claws = [-1, 1].map((side) => part([[0, -3, 0, 1, 3, 1, dk], [0, -3, 0, 2, 1, 1, claw]], [-0.5, 0, -0.5], [2.5, 3.5, side * 3.5]));
     const feet = [-1, 1].map((side) => part([[0, -1, 0, 2, 1, 1, dk]], [-1, 0, -0.5], [-3, 1, side * 2.5]));
@@ -702,7 +745,7 @@ function spider(c: number): Character {
         ],
         [-4, 0, -2.5],
         [0, 5, 0],
-        { roughness: 0.6 }
+        {roughness: 0.6}
     );
     const legs = [-2.5, -1, 0.5, 2].flatMap((x, i) =>
         [-1, 1].map((side) => {
@@ -754,13 +797,18 @@ function bee(c: number): Character {
         ],
         [-4, 0, -2],
         [0, 6, 0],
-        { roughness: 0.6 }
+        {roughness: 0.6}
     );
     const wings = wingPair(
         (side) => [[0, 0, side > 0 ? 0 : -4, 4, 1, 4, 0xe8f4ff]],
         (side) => [-1, 10, side * 1.5]
     );
-    for (const w of wings) (w.children[0] as THREE.Mesh).material = new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, opacity: 0.6, roughness: 0.2 });
+    for (const w of wings) (w.children[0] as THREE.Mesh).material = new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.6,
+        roughness: 0.2
+    });
     const group = new THREE.Group();
     group.add(body, ...wings);
     return {
@@ -792,7 +840,7 @@ function bat(c: number): Character {
         ],
         [-2, 0, -2],
         [0, 6, 0],
-        { roughness: 0.9 }
+        {roughness: 0.9}
     );
     const wings = [-1, 1].map((side) => {
         const z = (w: number) => (side > 0 ? 0 : -w);
@@ -838,7 +886,7 @@ function moth(c: number): Character {
         ],
         [-3, 0, -1.5],
         [0, 7, 0],
-        { roughness: 0.95 }
+        {roughness: 0.95}
     );
     const wings = [-1, 1].map((side) => {
         const z = (w: number, at: number) => (side > 0 ? at : -at - w);
@@ -882,9 +930,14 @@ function dragonfly(c: number): Character {
         ],
         [-8, 0, -1.5],
         [0, 6, 0],
-        { roughness: 0.3, metalness: 0.2 }
+        {roughness: 0.3, metalness: 0.2}
     );
-    const glass = new THREE.MeshStandardMaterial({ vertexColors: true, transparent: true, opacity: 0.55, roughness: 0.2 });
+    const glass = new THREE.MeshStandardMaterial({
+        vertexColors: true,
+        transparent: true,
+        opacity: 0.55,
+        roughness: 0.2
+    });
     const wings = [-1, 1].flatMap((side) =>
         [3, -1].map((x) => {
             const w = part([[0, 0, side > 0 ? 0 : -5, 3, 1, 5, 0xdff4ff]], [0, 0, 0], [x - 2, 8, side * 1]);

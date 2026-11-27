@@ -34,23 +34,23 @@
  * See also: core/game.ts, core/palette.ts, fx/effects.ts, render/tier.ts; DESIGN.md "9. Rendering".
  */
 import * as THREE from "three";
-import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
-import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
-import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
-import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
-import { GTAOPass } from "three/examples/jsm/postprocessing/GTAOPass.js";
-import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
-import { CAGE, DEAD_TIME, type Game } from "../core/game";
-import { BODY_H, BODY_W, LIFT_W } from "../core/physics";
-import { creatureInfo } from "../core/creatures";
-import { COLORS, hdr, themeFor, type Theme } from "../core/palette";
-import { rng } from "../core/random";
-import { H, W, type Level } from "../world/levels";
-import { Effects } from "../fx/effects";
-import type { TierSettings } from "./tier";
-import { backdropTextures, rockTexture, seedOf, tileTextures } from "./paint";
-import { eggGeometry, seedPileGeometry } from "./props";
-import { duckModel, harryModel, modelFor, type Character, type Mode } from "./characters";
+import {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer.js";
+import {RenderPass} from "three/examples/jsm/postprocessing/RenderPass.js";
+import {UnrealBloomPass} from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
+import {OutputPass} from "three/examples/jsm/postprocessing/OutputPass.js";
+import {GTAOPass} from "three/examples/jsm/postprocessing/GTAOPass.js";
+import {RoundedBoxGeometry} from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
+import {CAGE, DEAD_TIME, type Game} from "../core/game";
+import {BODY_H, BODY_W, LIFT_W} from "../core/physics";
+import {creatureInfo} from "../core/creatures";
+import {COLORS, hdr, type Theme, themeFor} from "../core/palette";
+import {rng} from "../core/random";
+import {H, type Level, W} from "../world/levels";
+import {Effects} from "../fx/effects";
+import type {TierSettings} from "./tier";
+import {backdropTextures, rockTexture, seedOf, tileTextures} from "./paint";
+import {eggGeometry, seedPileGeometry} from "./props";
+import {type Character, duckModel, harryModel, type Mode, modelFor} from "./characters";
 
 const DEPTH = 1.2; // block depth (z)
 /** Harry is drawn at 85% of his 1 × 2 cell box, from the feet. */
@@ -134,14 +134,13 @@ export class View {
     /** Ground-level blob shadows: Harry's, one per walker, and static ones (eggs, grain). */
     private blobTex = blobTexture();
     private harryBlob!: THREE.Mesh;
-    /** Called when the GPU context is lost (main.ts pauses the run). */
-    onContextLost = () => {};
+    private lastX: number | undefined;
 
     constructor(
         host: HTMLElement,
         private ts: TierSettings
     ) {
-        this.renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+        this.renderer = new THREE.WebGLRenderer({antialias: false, powerPreference: "high-performance"});
         this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
         this.renderer.toneMappingExposure = 1.05;
         this.renderer.shadowMap.enabled = ts.shadowMap > 0;
@@ -193,7 +192,7 @@ export class View {
         this.composer.addPass(new RenderPass(this.scene, this.camera));
         if (ts.ao) {
             const ao = new GTAOPass(this.scene, this.camera, 1, 1);
-            ao.updateGtaoMaterial({ radius: 0.6, thickness: 1 });
+            ao.updateGtaoMaterial({radius: 0.6, thickness: 1});
             ao.blendIntensity = 0.8;
             this.composer.addPass(ao);
             this.ao = ao;
@@ -207,6 +206,10 @@ export class View {
         // The host's size is set by CSS (on portrait phones it leaves room for the controls).
         new ResizeObserver(() => this.resize()).observe(host);
     }
+
+    /** Called when the GPU context is lost (main.ts pauses the run). */
+    onContextLost = () => {
+    };
 
     resize() {
         const host = this.renderer.domElement.parentElement!;
@@ -231,45 +234,6 @@ export class View {
         this.camera.position.copy(this.camBase).add(this.camDrift);
         this.camera.lookAt(this.camLook);
         this.camera.updateProjectionMatrix();
-    }
-
-    /** A soft dark patch, lying flat on whatever is below; opacity is lower where shadow maps exist. */
-    private makeBlob(size: number) {
-        const m = new THREE.Mesh(
-            BLOB_GEO,
-            new THREE.MeshBasicMaterial({
-                map: this.blobTex,
-                transparent: true,
-                depthWrite: false,
-                opacity: this.ts.shadowMap ? 0.4 : 0.7,
-                color: 0x000000,
-            })
-        );
-        m.userData.size = size;
-        m.userData.alpha = m.material.opacity;
-        m.renderOrder = 1;
-        return m;
-    }
-
-    /**
-     * Put a blob on the first surface at or below world (x, feetY): a platform or ladder-top
-     * plank, read from the tiles. It shrinks and fades with height, and is hidden with nothing below.
-     */
-    private placeBlob(b: THREE.Mesh, tiles: string, x: number, feetY: number, scale = 1) {
-        const c = Math.min(W - 1, Math.max(0, Math.floor(x)));
-        let top = -1;
-        for (let r = Math.max(0, Math.ceil(H - feetY - 0.05)); r < H; r++)
-            if ("#T".includes(tiles[r * W + c])) {
-                top = H - r;
-                break;
-            }
-        const h = feetY - top;
-        b.visible = top >= 0 && h > -0.1 && scale > 0.05;
-        if (!b.visible) return;
-        const k = Math.max(0.25, 1 - h / 7);
-        b.position.set(x, top + 0.015, 0);
-        b.scale.setScalar(b.userData.size * k * scale);
-        (b.material as THREE.MeshBasicMaterial).opacity = b.userData.alpha * k;
     }
 
     /**
@@ -355,7 +319,7 @@ export class View {
             else this.duckV.group.position.set(d.x / 8, H - d.y / 8 - 0.75, 0);
             const want = caged ? FACE_R + 0.4 : d.vx >= 0 ? FACE_R : FACE_L;
             this.duckV.group.rotation.y += (want - this.duckV.group.rotation.y) * Math.min(1, dt * 8);
-            this.duckV.pose({ dt, t, phase: 0, mode: caged ? "idle" : "walk", land: 0 });
+            this.duckV.pose({dt, t, phase: 0, mode: caged ? "idle" : "walk", land: 0});
             this.placeBlob(this.duckBlob, g.level.tiles, d.x / 8, H - d.y / 8 - 0.75);
             this.duckBlob.visible = this.duckBlob.visible && !caged;
         } else if (this.duckV) this.duckV.group.visible = false;
@@ -371,7 +335,7 @@ export class View {
             v.group.rotation.y = v.face;
             v.group.rotation.z = h.mode === "eat" ? Math.sin(t * 14 + i) * 0.1 : 0;
             const mode: Mode = h.mode === "eat" ? "eat" : h.mode === "climb" ? "climb" : "walk";
-            v.pose({ dt, t: t + i, phase: h.dist * STRIDE, mode, land: 0, reach: 0 });
+            v.pose({dt, t: t + i, phase: h.dist * STRIDE, mode, land: 0, reach: 0});
             this.placeBlob(v.blob, g.level.tiles, h.x / 8, H - h.feet / 8);
         });
         g.flyers.forEach((f, i) => {
@@ -381,7 +345,7 @@ export class View {
             const want = f.dir > 0 ? FACE_R : FACE_L;
             v.face += (want - v.face) * turn;
             v.group.rotation.y = v.face;
-            v.pose({ dt, t: t + i * 3, phase: 0, mode: "walk", land: 0, reach: 0 });
+            v.pose({dt, t: t + i * 3, phase: 0, mode: "walk", land: 0, reach: 0});
         });
 
         const b = g.harry;
@@ -425,19 +389,19 @@ export class View {
                 since < TUMBLE
                     ? "flail"
                     : g.phase === "clear"
-                      ? "cheer"
-                      : climbing
-                        ? "climb"
-                        : ground
-                          ? moving
-                              ? "walk"
-                              : "idle"
-                          : b.vy < 0
-                            ? "rise"
-                            : "fall";
+                        ? "cheer"
+                        : climbing
+                            ? "climb"
+                            : ground
+                                ? moving
+                                    ? "walk"
+                                    : "idle"
+                                : b.vy < 0
+                                    ? "rise"
+                                    : "fall";
             this.lastX = b.x;
             const land = Math.min(1, Math.max(0, 1 - (t - this.landAt) / LAND_SQUASH));
-            this.harry.pose({ dt, t, phase: b.dist * STRIDE, mode: mode, land });
+            this.harry.pose({dt, t, phase: b.dist * STRIDE, mode: mode, land});
             // The lamp dims and (motion allowing) gutters as the clock runs down.
             const f = Math.max(0, g.time / g.level.time);
             if (playing && f < 0.2) power *= (0.45 + 2.75 * f) * (REDUCED_MOTION ? 1 : 0.75 + 0.25 * Math.sin(t * 31) * Math.sin(t * 7.7));
@@ -462,7 +426,44 @@ export class View {
         if (!this.lost) this.composer.render();
     }
 
-    private lastX: number | undefined;
+    /** A soft dark patch, lying flat on whatever is below; opacity is lower where shadow maps exist. */
+    private makeBlob(size: number) {
+        const m = new THREE.Mesh(
+            BLOB_GEO,
+            new THREE.MeshBasicMaterial({
+                map: this.blobTex,
+                transparent: true,
+                depthWrite: false,
+                opacity: this.ts.shadowMap ? 0.4 : 0.7,
+                color: 0x000000,
+            })
+        );
+        m.userData.size = size;
+        m.userData.alpha = m.material.opacity;
+        m.renderOrder = 1;
+        return m;
+    }
+
+    /**
+     * Put a blob on the first surface at or below world (x, feetY): a platform or ladder-top
+     * plank, read from the tiles. It shrinks and fades with height, and is hidden with nothing below.
+     */
+    private placeBlob(b: THREE.Mesh, tiles: string, x: number, feetY: number, scale = 1) {
+        const c = Math.min(W - 1, Math.max(0, Math.floor(x)));
+        let top = -1;
+        for (let r = Math.max(0, Math.ceil(H - feetY - 0.05)); r < H; r++)
+            if ("#T".includes(tiles[r * W + c])) {
+                top = H - r;
+                break;
+            }
+        const h = feetY - top;
+        b.visible = top >= 0 && h > -0.1 && scale > 0.05;
+        if (!b.visible) return;
+        const k = Math.max(0.25, 1 - h / 7);
+        b.position.set(x, top + 0.015, 0);
+        b.scale.setScalar(b.userData.size * k * scale);
+        (b.material as THREE.MeshBasicMaterial).opacity = b.userData.alpha * k;
+    }
 
     /** Build the walkers and fliers again when the game has respawned them (new arrays). */
     private syncCast(g: Game) {
@@ -484,7 +485,7 @@ export class View {
             m.group.traverse((o) => (o.castShadow = this.ts.shadowMap > 0));
             const blob = this.makeBlob(fly ? 0 : 0.9);
             this.cast.add(m.group, blob);
-            return { ...m, id: kind, baseScale: scale, blob, face: FACE_R };
+            return {...m, id: kind, baseScale: scale, blob, face: FACE_R};
         };
         this.walkers = g.hens.map((h) => make(h.kind, false));
         this.flyers = g.flyers.map((f) => make(f.kind, true));
@@ -557,14 +558,14 @@ export class View {
         blocks(
             cells("#"),
             new RoundedBoxGeometry(1, 0.84, DEPTH, 2, 0.05),
-            new THREE.MeshStandardMaterial({ map: rockTex, bumpMap: rockTex, bumpScale: 2, roughness: 0.9 }),
+            new THREE.MeshStandardMaterial({map: rockTex, bumpMap: rockTex, bumpScale: 2, roughness: 0.9}),
             0.58,
             th.rock
         );
         blocks(
             cells("#T"),
             new RoundedBoxGeometry(1, 0.16, DEPTH, 2, 0.04),
-            new THREE.MeshStandardMaterial({ map: this.tex.ledge, bumpMap: this.tex.ledge, roughness: 0.8 }),
+            new THREE.MeshStandardMaterial({map: this.tex.ledge, bumpMap: this.tex.ledge, roughness: 0.8}),
             0.08,
             th.ledge
         );
@@ -573,12 +574,12 @@ export class View {
         const lad = cells("HT");
         const rails = new THREE.InstancedMesh(
             new THREE.BoxGeometry(0.08, 1, 0.12),
-            new THREE.MeshStandardMaterial({ color: th.crumble, roughness: 0.7 }),
+            new THREE.MeshStandardMaterial({color: th.crumble, roughness: 0.7}),
             Math.max(1, lad.length * 2)
         );
         const rungs = new THREE.InstancedMesh(
             new THREE.BoxGeometry(0.6, 0.07, 0.1),
-            new THREE.MeshStandardMaterial({ color: COLORS.ladderDark, roughness: 0.7 }),
+            new THREE.MeshStandardMaterial({color: COLORS.ladderDark, roughness: 0.7}),
             Math.max(1, lad.length * 3)
         );
         rails.count = lad.length * 2;
@@ -602,7 +603,7 @@ export class View {
         for (let i = W; i < tiles.length; i++) if ("#T".includes(tiles[i]) && at(i % W, Math.floor(i / W) - 1) !== "#") tops.push(i);
         const strips = new THREE.InstancedMesh(
             new THREE.BoxGeometry(1.02, 0.05, 0.05),
-            new THREE.MeshBasicMaterial({ color: hdr(th.glow, EDGE_GLOW), toneMapped: false }),
+            new THREE.MeshBasicMaterial({color: hdr(th.glow, EDGE_GLOW), toneMapped: false}),
             Math.max(1, tops.length)
         );
         strips.count = tops.length;
@@ -617,19 +618,25 @@ export class View {
             const grp = new THREE.Group();
             const slab = new THREE.Mesh(
                 new THREE.BoxGeometry(LIFT_W / 8, 0.24, 0.9),
-                new THREE.MeshStandardMaterial({ map: this.tex.belt, bumpMap: this.tex.belt, color: COLORS.lift, roughness: 0.4, metalness: 0.3 })
+                new THREE.MeshStandardMaterial({
+                    map: this.tex.belt,
+                    bumpMap: this.tex.belt,
+                    color: COLORS.lift,
+                    roughness: 0.4,
+                    metalness: 0.3
+                })
             );
             slab.position.y = -0.12;
             const glow = new THREE.Mesh(
                 new THREE.BoxGeometry(LIFT_W / 8 + 0.04, 0.06, 0.06),
-                new THREE.MeshBasicMaterial({ color: hdr(COLORS.liftGlow, 1.8), toneMapped: false })
+                new THREE.MeshBasicMaterial({color: hdr(COLORS.liftGlow, 1.8), toneMapped: false})
             );
             glow.position.set(0, -0.02, 0.48);
             grp.add(shadows(slab), glow);
             this.level.add(grp);
             const lane = new THREE.Mesh(
                 new THREE.PlaneGeometry(LIFT_W / 8, H),
-                new THREE.MeshBasicMaterial({ color: COLORS.lift, transparent: true, opacity: 0.07, depthWrite: false })
+                new THREE.MeshBasicMaterial({color: COLORS.lift, transparent: true, opacity: 0.07, depthWrite: false})
             );
             lane.position.set(l.x / 8 + LIFT_W / 16, H / 2, -DEPTH / 2 - 0.01);
             this.level.add(lane);
@@ -639,7 +646,10 @@ export class View {
         // Eggs and grain.
         const eggGeo = eggGeometry();
         this.eggs = lv.eggs.map((e, i) => {
-            const m = new THREE.Mesh(eggGeo, new THREE.MeshBasicMaterial({ color: hdr(COLORS.egg, EGG_GLOW), toneMapped: false }));
+            const m = new THREE.Mesh(eggGeo, new THREE.MeshBasicMaterial({
+                color: hdr(COLORS.egg, EGG_GLOW),
+                toneMapped: false
+            }));
             m.userData.y = H - e.y / 8;
             m.position.set(e.x / 8, m.userData.y, 0);
             m.scale.setScalar(1.15);
@@ -648,7 +658,12 @@ export class View {
             return m;
         });
         const pileGeo = seedPileGeometry();
-        const pileMat = new THREE.MeshStandardMaterial({ color: COLORS.seed, roughness: 0.5, emissive: COLORS.seed, emissiveIntensity: 0.35 });
+        const pileMat = new THREE.MeshStandardMaterial({
+            color: COLORS.seed,
+            roughness: 0.5,
+            emissive: COLORS.seed,
+            emissiveIntensity: 0.35
+        });
         this.piles = lv.seeds.map((s) => {
             const m = new THREE.Mesh(pileGeo, pileMat);
             m.scale.setScalar(1.3);
@@ -659,9 +674,9 @@ export class View {
 
         // The cage, top left: roof and floor plates, bars (which lift when the duck breaks out).
         const cg = new THREE.Group();
-        const cageMat = new THREE.MeshStandardMaterial({ color: COLORS.cage, metalness: 0.6, roughness: 0.35 });
+        const cageMat = new THREE.MeshStandardMaterial({color: COLORS.cage, metalness: 0.6, roughness: 0.35});
         const bars = new THREE.Group();
-        const glowMat = new THREE.MeshBasicMaterial({ color: hdr(COLORS.cageGlow, 1.2), toneMapped: false });
+        const glowMat = new THREE.MeshBasicMaterial({color: hdr(COLORS.cageGlow, 1.2), toneMapped: false});
         for (let x = -1.55; x <= 1.56; x += 0.45) {
             const bar = new THREE.Mesh(new THREE.BoxGeometry(0.07, 3.1, 0.07), cageMat);
             bar.position.set(x, 1.6, 0.5);
@@ -676,7 +691,7 @@ export class View {
         cg.add(bars, top, base, lamp);
         cg.position.set(CAGE.x / 8, H - 5, 0);
         this.level.add(shadows(cg));
-        this.cage = { group: cg, bars, glow: glowMat };
+        this.cage = {group: cg, bars, glow: glowMat};
 
         // The Mother Duck (visible as the game dictates).
         this.duckV?.group.parent?.remove(this.duckV.group);
@@ -702,7 +717,7 @@ export class View {
 
 const jitter = (hex: number, r: () => number) => {
     const c = new THREE.Color(hex);
-    const hsl = { h: 0, s: 0, l: 0 };
+    const hsl = {h: 0, s: 0, l: 0};
     c.getHSL(hsl);
     return c.setHSL((hsl.h + (r() - 0.5) * 0.05 + 1) % 1, Math.min(1, Math.max(0, hsl.s + (r() - 0.5) * 0.16)), Math.min(0.95, Math.max(0.05, hsl.l + (r() - 0.5) * 0.1))).getHex();
 };

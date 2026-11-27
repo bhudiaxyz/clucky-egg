@@ -31,14 +31,14 @@
  *
  * See also: core/physics.ts, world/levels.ts, render/view.ts; DESIGN.md "8. Game rules".
  */
-import { CELL, H, tileAt, TIER_ROWS, W, type Level } from "../world/levels";
-import { farmFor, passOf, type Mode } from "../world/generate";
-import { creatureInfo, flyerFor, walkerFor } from "./creatures";
-import { BODY_H, BODY_W, newBody, stepHarry, TICK, updateLifts, type Body, type Input, type Lift } from "./physics";
-import { rng } from "./random";
+import {CELL, H, type Level, TIER_ROWS, tileAt, W} from "../world/levels";
+import {farmFor, type Mode, passOf} from "../world/generate";
+import {creatureInfo, flyerFor, walkerFor} from "./creatures";
+import {type Body, BODY_H, BODY_W, type Input, type Lift, newBody, stepHarry, TICK, updateLifts} from "./physics";
+import {rng} from "./random";
 
 export type GameEvent = "jump" | "land" | "egg" | "seed" | "eat" | "die" | "clear" | "extra" | "over" | "duck";
-export type { Mode };
+export type {Mode};
 export type Phase = "play" | "dead" | "clear" | "over";
 
 export const HEN_W = 8;
@@ -52,7 +52,7 @@ export const CLEAR_TIME = 2.4;
 /** Seconds the bonus clock stands still after Harry takes grain. */
 export const FREEZE = 2.5;
 /** The duck's cage, top-left: centre in game px. */
-export const CAGE = { x: 26, y: 26 };
+export const CAGE = {x: 26, y: 26};
 const DUCK_DELAY = 2.5;
 const CLOCK_RATE = 10;
 
@@ -118,7 +118,6 @@ export class Game {
     phaseT = 0;
     /** Seconds since the level began (animation clock). */
     clock = 0;
-    onEvent: (e: GameEvent) => void = () => {};
     readonly demo: boolean;
     readonly mode: Mode;
     readonly seed: number;
@@ -137,6 +136,38 @@ export class Game {
         this.load();
     }
 
+    get henSpeed(): number {
+        return (20 + 2 * (this.n % 8)) * [1, 1, 1.05, 1.1, 1.35][this.pass];
+    }
+
+    /** Flier speed (px/s). */
+    get flyerSpeed(): number {
+        return 26 * [1, 1, 1, 1.15, 1.4][this.pass];
+    }
+
+    get duckSpeed(): number {
+        return [0, 22, 26, 30, 38][this.pass];
+    }
+
+    onEvent: (e: GameEvent) => void = () => {
+    };
+
+    update(dt: number, input: Input) {
+        this.acc += dt;
+        while (this.acc >= TICK) {
+            this.acc -= TICK;
+            this.tick(input);
+        }
+    }
+
+    die() {
+        if (this.phase !== "play") return;
+        this.lives--;
+        this.phase = "dead";
+        this.phaseT = 0;
+        this.onEvent("die");
+    }
+
     /** Set up the level fresh: all eggs and grain, full clock. */
     private load() {
         const lv = this.level;
@@ -149,7 +180,7 @@ export class Game {
         this.clock = 0;
         this.phase = "play";
         this.phaseT = 0;
-        this.lifts = lv.lifts.map((l) => ({ x: l.x, y: l.phase * H * CELL, py: l.phase * H * CELL }));
+        this.lifts = lv.lifts.map((l) => ({x: l.x, y: l.phase * H * CELL, py: l.phase * H * CELL}));
         this.rand = rng(this.n * 7919 + 17);
         this.reset();
     }
@@ -162,7 +193,7 @@ export class Game {
         this.hens = this.pass === 1 ? [] : starts.map((h, i) => this.newHen(h.x, h.feet, i));
         // Bugs on the wing from pass 3: one, two, then three lanes of air.
         const lanes = this.pass >= 2 ? this.pass - 1 : 0;
-        this.flyers = Array.from({ length: lanes }, (_, i) => ({
+        this.flyers = Array.from({length: lanes}, (_, i) => ({
             kind: flyerFor(this.n, i).id,
             x: 40 + ((i * 83 + this.n * 37) % 120),
             y: TIER_ROWS[[1, 2, 0, 3][i % 4]] * CELL + 10,
@@ -171,8 +202,8 @@ export class Game {
         }));
         this.duck =
             this.pass === 0
-                ? { x: CAGE.x, y: CAGE.y, vx: 0, vy: 0, state: "caged" }
-                : { x: CAGE.x, y: CAGE.y, vx: 0, vy: 0, state: "wait" };
+                ? {x: CAGE.x, y: CAGE.y, vx: 0, vy: 0, state: "caged"}
+                : {x: CAGE.x, y: CAGE.y, vx: 0, vy: 0, state: "wait"};
     }
 
     private newHen(x: number, feet: number, i: number): Hen {
@@ -188,27 +219,6 @@ export class Game {
             think: 1 + this.rand() * 2,
             dist: 0,
         };
-    }
-
-    get henSpeed(): number {
-        return (20 + 2 * (this.n % 8)) * [1, 1, 1.05, 1.1, 1.35][this.pass];
-    }
-
-    /** Flier speed (px/s). */
-    get flyerSpeed(): number {
-        return 26 * [1, 1, 1, 1.15, 1.4][this.pass];
-    }
-
-    get duckSpeed(): number {
-        return [0, 22, 26, 30, 38][this.pass];
-    }
-
-    update(dt: number, input: Input) {
-        this.acc += dt;
-        while (this.acc >= TICK) {
-            this.acc -= TICK;
-            this.tick(input);
-        }
     }
 
     private tick(inp: Input) {
@@ -276,14 +286,6 @@ export class Game {
     private touchesHarry(cx: number, cy: number, hw: number, hh: number): boolean {
         const b = this.harry;
         return Math.abs(cx - (b.x + BODY_W / 2)) < hw + BODY_W / 2 - 1 && Math.abs(cy - (b.y + BODY_H / 2)) < hh + BODY_H / 2 - 1;
-    }
-
-    die() {
-        if (this.phase !== "play") return;
-        this.lives--;
-        this.phase = "dead";
-        this.phaseT = 0;
-        this.onEvent("die");
     }
 
     private award() {

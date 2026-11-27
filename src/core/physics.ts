@@ -28,7 +28,7 @@
  *
  * See also: world/levels.ts (tiles), core/game.ts, scripts/check.ts; DESIGN.md "5. Movement".
  */
-import { CELL, H, tileAt } from "../world/levels";
+import {CELL, H, tileAt} from "../world/levels";
 
 export const TICK = 1 / 120;
 export const BODY_W = 6;
@@ -79,7 +79,18 @@ export type Emit = (e: "jump" | "land") => void;
 export type Step = "ok" | "fall" | "crush";
 
 export function newBody(x: number, feet: number): Body {
-    return { x: x - BODY_W / 2, y: feet - BODY_H, vx: 0, vy: 0, mode: "ground", face: 1, lift: -1, top: 0, bot: 0, dist: 0 };
+    return {
+        x: x - BODY_W / 2,
+        y: feet - BODY_H,
+        vx: 0,
+        vy: 0,
+        mode: "ground",
+        face: 1,
+        lift: -1,
+        top: 0,
+        bot: 0,
+        dist: 0
+    };
 }
 
 const solid = (t: string, c: number, r: number) => tileAt(t, c, r) === "#";
@@ -113,11 +124,11 @@ export function support(t: string, lifts: Lift[], b: Body): { y: number; lift: n
     const k = Math.round(feet / CELL);
     if (Math.abs(feet - k * CELL) < 0.02) {
         const [c0, c1] = footCols(b.x);
-        for (let c = c0; c <= c1; c++) if (floor(t, c, k)) return { y: k * CELL, lift: -1 };
+        for (let c = c0; c <= c1; c++) if (floor(t, c, k)) return {y: k * CELL, lift: -1};
     }
     for (let i = 0; i < lifts.length; i++) {
         const l = lifts[i];
-        if (b.x + BODY_W - 1 > l.x && b.x + 1 < l.x + LIFT_W && Math.abs(feet - l.y) < 0.6) return { y: l.y, lift: i };
+        if (b.x + BODY_W - 1 > l.x && b.x + 1 < l.x + LIFT_W && Math.abs(feet - l.y) < 0.6) return {y: l.y, lift: i};
     }
     return null;
 }
@@ -131,14 +142,14 @@ export function landing(t: string, lifts: Lift[], b: Body, ny: number): { y: num
     for (let k = Math.ceil((oldFeet - EPS) / CELL); k <= Math.floor(newFeet / CELL); k++) {
         for (let c = c0; c <= c1; c++) {
             if (floor(t, c, k)) {
-                if (!best || k * CELL < best.y) best = { y: k * CELL, lift: -1 };
+                if (!best || k * CELL < best.y) best = {y: k * CELL, lift: -1};
             }
         }
     }
     for (let i = 0; i < lifts.length; i++) {
         const l = lifts[i];
         if (b.x + BODY_W - 1 > l.x && b.x + 1 < l.x + LIFT_W && oldFeet <= l.py + 1 && newFeet >= l.y) {
-            if (!best || l.y < best.y) best = { y: l.y, lift: i };
+            if (!best || l.y < best.y) best = {y: l.y, lift: i};
         }
     }
     return best;
@@ -166,7 +177,7 @@ function grab(t: string, b: Body, up: boolean, down: boolean): { c: number; top:
         bot = r;
     while (isLadder(t, c, top - 1)) top--;
     while (isLadder(t, c, bot + 1)) bot++;
-    return { c, top: top * CELL, bot: (bot + 1) * CELL };
+    return {c, top: top * CELL, bot: (bot + 1) * CELL};
 }
 
 function moveX(t: string, b: Body, dx: number): boolean {

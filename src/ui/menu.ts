@@ -26,10 +26,10 @@
  *
  * See also: main.ts (flow), index.html, styles.css; DESIGN.md "10. UI, menus and progress".
  */
-import { bandName } from "../core/difficulty";
-import { ALL_CREATURES } from "../core/creatures";
-import { HAZARDS } from "../render/props";
-import { farmFor, type Mode } from "../world/generate";
+import {bandName} from "../core/difficulty";
+import {ALL_CREATURES} from "../core/creatures";
+import {HAZARDS} from "../render/props";
+import {farmFor, type Mode} from "../world/generate";
 
 export interface MenuItem {
     label: string;
@@ -50,7 +50,7 @@ let introTimer = 0;
 
 const $ = (sel: string) => document.querySelector<HTMLElement>(sel)!;
 export const esc = (s: string) =>
-    s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+    s.replace(/[&<>"]/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"})[c]!);
 
 export function renderMainMenu(items: MenuItem[]) {
     const nav = $(".ls-menu");
@@ -68,7 +68,7 @@ export function renderMainMenu(items: MenuItem[]) {
             return b;
         })
     );
-    nav.querySelector<HTMLButtonElement>("button:not([disabled])")?.focus({ preventScroll: true });
+    nav.querySelector<HTMLButtonElement>("button:not([disabled])")?.focus({preventScroll: true});
 }
 
 export function renderButtons(host: HTMLElement, actions: Action[]) {
@@ -98,7 +98,7 @@ export function showSheet(o: { title: string; body: string | Node; actions: Acti
     (
         sheet.querySelector<HTMLElement>(".sheet-actions .primary") ??
         sheet.querySelector<HTMLElement>(".sheet-body button, .sheet-actions button")
-    )?.focus({ preventScroll: true });
+    )?.focus({preventScroll: true});
 }
 
 export function closeSheet() {
@@ -120,7 +120,7 @@ export function menuNav(dx: number, dy: number) {
     if (!els.length) return;
     const cur = document.activeElement as HTMLElement;
     const i = els.indexOf(cur);
-    if (i < 0) return els[0].focus({ preventScroll: true });
+    if (i < 0) return els[0].focus({preventScroll: true});
     const a = cur.getBoundingClientRect();
     let best: HTMLElement | undefined,
         bestD = Infinity;
@@ -132,7 +132,7 @@ export function menuNav(dx: number, dy: number) {
         const d = along + 2 * Math.abs(dx ? ey : ex);
         if (along > 1 && d < bestD) ((bestD = d), (best = e));
     }
-    (best ?? els[(i + dx + dy + els.length) % els.length]).focus({ preventScroll: true });
+    (best ?? els[(i + dx + dy + els.length) % els.length]).focus({preventScroll: true});
 }
 
 export function menuSelect() {
@@ -170,7 +170,7 @@ export const HOWTO = `
   <li><b>Mind the farm.</b> Hens and every other creature hurt on touch. After the first eight farms the Mother Duck breaks loose; later still come extra hens, bugs on the wing, and faster everything.</li>
 </ol>`;
 
-const MOVES = { walk: "patrols a platform", fly: "sweeps the air", boss: "flies at you" };
+const MOVES = {walk: "patrols a platform", fly: "sweeps the air", boss: "flies at you"};
 
 interface Slide {
     id: string;
@@ -195,7 +195,7 @@ const CAST: Slide[] = [
     })),
 ];
 
-const SETS: Record<string, Slide[]> = { cast: CAST, hazards: HAZARDS };
+const SETS: Record<string, Slide[]> = {cast: CAST, hazards: HAZARDS};
 
 /** One carousel: an animated preview (render/preview.ts) with ◀ ▶ to step through a set. */
 function carousel(set: string, title: string, note: string) {

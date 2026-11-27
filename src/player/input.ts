@@ -28,14 +28,14 @@
  * See also: core/physics.ts (Input), main.ts (pause / menu keys), index.html (#touch); DESIGN.md "13. Input".
  */
 import nipplejs from "nipplejs";
-import type { Input } from "../core/physics";
+import type {Input} from "../core/physics";
 
 export const isTouch = matchMedia("(pointer: coarse)").matches;
 
-const held: Input = { left: false, right: false, up: false, down: false, jump: false };
+const held: Input = {left: false, right: false, up: false, down: false, jump: false};
 /** Fingers holding the jump button (pointerId). */
 const touches = new Set<number>();
-const touchHeld: Input = { left: false, right: false, up: false, down: false, jump: false };
+const touchHeld: Input = {left: false, right: false, up: false, down: false, jump: false};
 let stick: (keyof Input)[] = [];
 /** Joystick dead zones, as a fraction of the stick's throw. */
 const STICK_WALK = 0.3;
@@ -77,7 +77,8 @@ export const HELP = isTouch ? TOUCH_HELP : KEY_HELP;
 
 export type PadButton = "pause" | "up" | "down" | "left" | "right" | "select" | "back";
 const padPrev = new Map<number, boolean[]>();
-let onPadButton: (b: PadButton) => void = () => {};
+let onPadButton: (b: PadButton) => void = () => {
+};
 
 export function setPadHandler(fn: typeof onPadButton) {
     onPadButton = fn;
@@ -129,12 +130,12 @@ function setupStick(zone: HTMLElement) {
         pad = nipplejs.create({
             zone,
             mode: "static",
-            position: { left: "50%", top: "50%" },
+            position: {left: "50%", top: "50%"},
             size: Math.min(zone.clientWidth, zone.clientHeight),
-            color: { front: "var(--accent)", back: "color-mix(in srgb, var(--ink) 30%, transparent)" },
+            color: {front: "var(--accent)", back: "color-mix(in srgb, var(--ink) 30%, transparent)"},
         });
         pad.on("move", (e) => {
-            const { x, y } = e.data.vector;
+            const {x, y} = e.data.vector;
             const keys: (keyof Input)[] = [];
             // The dominant axis wins, so a diagonal doesn't walk and climb at once.
             if (Math.abs(y) > Math.abs(x) * 1.1 && Math.abs(y) > STICK_CLIMB) keys.push(y > 0 ? "up" : "down");
