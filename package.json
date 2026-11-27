@@ -1,0 +1,26 @@
+{
+    "name": "clucky-egg",
+    "version": "1.0.0",
+    "description": "A browser clone of the classic Chuckie Egg: collect the eggs and the grain, dodge the hens, beat the clock.",
+    "license": "MIT",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite --port 5192 --strictPort --host",
+        "build": "tsc --noEmit && vite build",
+        "typecheck": "tsc --noEmit",
+        "preview": "vite preview --port 5192 --strictPort --host",
+        "check": "node --import ./scripts/ts-resolve.mjs scripts/check.ts",
+        "format": "prettier --write \"src/**/*.{ts,css}\" \"scripts/**/*.ts\" vite.config.ts index.html"
+    },
+    "dependencies": {
+        "nipplejs": "^1.0.4",
+        "three": "^0.185.1"
+    },
+    "devDependencies": {
+        "@types/three": "^0.185.4",
+        "prettier": "^3.9.10",
+        "typescript": "^5.9.3",
+        "vite": "^8.2.2"
+    }
+}
